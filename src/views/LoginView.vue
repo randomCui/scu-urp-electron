@@ -1,6 +1,6 @@
 <template>
   <div style="display: flex;justify-content: center;align-content: center">
-    <div class="login-plate">
+    <div v-if="!isLogin" class="login-plate">
       <h3>账号登陆</h3>
       <form class="login-wrapper" style="display: grid">
         <input v-model="studentID" class="account-input" placeholder="学号" type="text" maxlength="13">
@@ -16,6 +16,9 @@
         </div>
       </form>
     </div>
+    <div v-else>
+      <h2>已经登陆过了</h2>
+    </div>
   </div>
 </template>
 
@@ -29,28 +32,44 @@ export default {
       captchaUrl: undefined,
       studentID: "",
       password: "",
-      captcha: ""
+      captcha: "",
+      isLogin: true,
     }
   },
   mounted() {
     /* eslint-disable*/
-    window.ipc.on("refreshCaptcha",(data)=>{
-       this.captchaUrl= URL.createObjectURL(new Blob([data],{type: "image/jpeg"}))
+    window.ipc.invoke("urp_login_state").then(state=>{
+      console.log(JSON.parse(state))
+      this.isLogin = JSON.parse(state);
+      return JSON.parse(state)
+    }).then((isLogin)=>{
+      if(!isLogin) {
+        window.ipc.invoke("init_urp_login").then(res => {
+          this.captchaUrl = URL.createObjectURL(new Blob([res], {type: "image/jpeg"}))
+        })
+      }
     })
-    this.refreshCaptcha()
+
   },
   methods:{
     onLoginButtonPressed(){
       console.log(this.studentID,this.password,this.captcha)
-      window.ipc.send("postLoginInfo",JSON.stringify({
+      window.ipc.invoke("post_login_info",JSON.stringify({
         student_id : this.studentID,
         password: this.password,
         captcha: this.captcha
-      }))
+      })).then(res=>{
+        console.log(res)
+        window.ipc.invoke("urp_login_state",(state)=>{
+          this.isLogin = JSON.parse(state)
+        })
+      })
     },
     async refreshCaptcha(){
       /* eslint-disable*/
-      window.ipc.send("refreshCaptcha")
+      window.ipc.invoke("refresh_captcha").then(data=>{
+        this.captchaUrl= URL.createObjectURL(new Blob([data],{type: "image/jpeg"}))
+      })
     }
   }
 };
