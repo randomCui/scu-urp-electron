@@ -197,3 +197,7 @@ ipcMain.handle('get_course_list',async (event, filter)=>{
     return JSON.stringify(await courseQueryWorker.searchCourse(JSON.parse(filter)))
 })
 
+ipcMain.handle("modify_selection_list", (event, op)=>{
+
+})
+

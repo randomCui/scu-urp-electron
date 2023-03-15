@@ -10,7 +10,7 @@ const validChannels = [
 
   // channel for SelectCourseView
   "get_course_list",
-  "modify_pending_list",
+  "modify_selection_list",
 
 ];
 contextBridge.exposeInMainWorld(
