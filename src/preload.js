@@ -10,8 +10,10 @@ const validChannels = [
 
   // channel for SelectCourseView
   "get_course_list",
+    "get_course_list_alt",
+    "get_course_list_cached",
   "modify_selection_list",
-
+    'refresh_remains',
 ];
 contextBridge.exposeInMainWorld(
   "ipc", {

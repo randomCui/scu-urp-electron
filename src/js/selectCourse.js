@@ -1,12 +1,12 @@
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-const {course_select_submit_url, http_head} = require('../config/config');
+const {http_head} = require('../config/config');
 
-const {courseList} = require("../../test/自由选课-查询微积分")
+// const {courseList} = require("../../test/自由选课-查询微积分")
 
-class DesiredCourse {
+export class DesiredCourse {
     constructor(courseObject) {
-        courseObject = courseList.rwRxkZlList[0]
+        // courseObject = courseList.rwRxkZlList[0]
         this.ID = courseObject.id  // 该课程在教务处的唯一排序号
         this.number = courseObject.kch  // 课程号
         this.seqNumber = courseObject.kxh;  // 课序号
@@ -14,8 +14,18 @@ class DesiredCourse {
         this.name = courseObject.kcm;  // 课程名
         this.teacher = courseObject.skjs  // 授课教师
 
-        // this.UID = this.ID + '_' + this.subID + '_' + this.semester + '_' + this.name;
+        this.campus = courseObject.kkxqm
+        this.building = courseObject.jxlm
+        this.classroom = courseObject.jasm
 
+        this.weekday = courseObject.skxq
+        this.startSection = courseObject.skjc
+        this.duringSection = courseObject.cxjc
+
+        this.capacity= courseObject.bkskrl
+        this.remain= courseObject.bkskyl
+
+        // this.UID = this.ID + '_' + this.subID + '_' + this.semester + '_' + this.name
         this.programPlanNumber = undefined;
         // this.token = undefined;
 
@@ -110,13 +120,26 @@ class DesiredCourse {
 
     toJSON() {
         return {
+            ID: this.ID,
             name: this.name,
             number: this.number,
-            seqNumber: this.number,
+            seqNumber: this.seqNumber,
             teacher: this.teacher,
             semester: this.semester,
+            campus: this.campus,
+            building: this.building,
+            classroom: this.classroom,
+            weekday: this.weekday,
+            startSection: this.startSection,
+            duringSection: this.duringSection,
+            capacity: this.capacity,
+            remain: this.remain
         }
     }
+
+    // fromAltSearch(altSearchObj){
+    //     this.name
+    // }
 
     startQuery(cookie, programPlanNumber, waitingQueue) {
         this.cookie = cookie;
@@ -149,8 +172,8 @@ class DesiredCourse {
     }
 
     async start() {
-        const {course_select_submit_url, course_select_entry_url, course_select_search_url} = require('../js/config');
-        const {test_submit_url} = require('../test/test_config')
+        const {course_select_submit_url, course_select_entry_url, course_select_search_url} = require('../config/config');
+        // const {test_submit_url} = require('../test/test_config')
 
         let canSubmit = false;
         let hasCourse = false;
@@ -245,7 +268,7 @@ class DesiredCourse {
     }
 
     async queryWaitingFor() {
-        const {course_query_waiting_for_url} = require('./config');
+        const {course_query_waiting_for_url} = require('../config/config');
         let queryPost = this.makePost();
         delete queryPost.tokenValue;
         let queryPayload = await fetch(course_query_waiting_for_url, {
@@ -267,7 +290,7 @@ class DesiredCourse {
     }
 
     async queryWaitingForResult(payload, retry) {
-        const {course_query_waiting_for_result_url} = require('./config');
+        const {course_query_waiting_for_result_url} = require('../config/config');
         if (retry > 10) {
             console.log('可能出现问题');
             this.updateStatus('suspend');
@@ -336,12 +359,12 @@ class CourseScheduler {
         }
     }
 
-    async startAll() {
-        this.pendingList.forEach(task => {
-            // do something
-        });
-        await this.start();
-    }
+    // async startAll() {
+    //     this.pendingList.forEach(task => {
+    //         // do something
+    //     });
+    //     await this.start();
+    // }
 
     async stopAll() {
         this.pendingList.forEach(task => {
@@ -352,7 +375,7 @@ class CourseScheduler {
     }
 
     async searchCourse(searchtj) {
-        const {course_select_search_url, http_head} = require('./config');
+        const {course_select_search_url, http_head} = require('../config/config');
         return fetch(course_select_search_url, {
             method: 'POST',
             headers: {
@@ -370,27 +393,27 @@ class CourseScheduler {
         })
     }
 
-    async searchCourseAlt(payload) {
-        const {zhjwjs_url, zhjwjs_search_url} = require('../test/test_config');
-        return await fetch(zhjwjs_url).then(response => {
-            return response.headers.get('set-cookie').split(';')[0];
-        }).then(cookie => {
-            return fetch(zhjwjs_search_url, {
-                method: 'POST',
-                headers: {
-                    'User-Agent': http_head,
-                    'cookie': cookie,
-                },
-                body: new URLSearchParams(payload),
-            })
-        }).then(response => {
-            // console.log(response)
-            return response.text();
-        }).then(text => {
-            this.searchContext = JSON.parse(text)['list']['records'];
-            return text;
-        })
-    }
+    // async searchCourseAlt(payload) {
+    //     const {zhjwjs_url, zhjwjs_search_url} = require('../test/test_config');
+    //     return await fetch(zhjwjs_url).then(response => {
+    //         return response.headers.get('set-cookie').split(';')[0];
+    //     }).then(cookie => {
+    //         return fetch(zhjwjs_search_url, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'User-Agent': http_head,
+    //                 'cookie': cookie,
+    //             },
+    //             body: new URLSearchParams(payload),
+    //         })
+    //     }).then(response => {
+    //         // console.log(response)
+    //         return response.text();
+    //     }).then(text => {
+    //         this.searchContext = JSON.parse(text)['list']['records'];
+    //         return text;
+    //     })
+    // }
 
     addCourse(course) {
         let matchingCourse = this.findMatchingCourse(course);
@@ -481,7 +504,7 @@ class CourseScheduler {
      * @returns {Promise<boolean>}如果在选课时间返回true  否则返回false
      */
     async is_course_selection_time() {
-        const {course_select_entry_url} = require('../js/config')
+        const {course_select_entry_url} = require('../config/config')
         return fetch(course_select_entry_url, {
             headers: {
                 'Cookie': this.cookie,
@@ -497,7 +520,7 @@ class CourseScheduler {
 }
 
 
-module.exports = {
-    CourseScheduler,
-    DesiredCourse,
-}
+// module.exports = {
+//     CourseScheduler,
+//     DesiredCourse,
+// }

@@ -89,13 +89,17 @@ if (isDevelopment) {
 
 const {jwc_entry_url, jwc_jc, jwc_captcha_url, jwc_home, http_head} = require('../src/config/config');
 
-let JSESSIONID;
-let tokenValue;
-let isLogin = false;
+import config from "./config/webSessionEssential";
+let JSESSIONID = config.JSESSIONID;
+let isLogin = config.isLogin
+let tokenValue = config.tokenValue
+import {CourseScheduler} from "@/js/courseScheduler";
+
 // let planNumber;
 import CourseQuery from "../src/js/queryCourse"
 
-let courseQueryWorker = new CourseQuery(JSESSIONID)
+let courseQueryWorker = new CourseQuery()
+let courseScheduler = new CourseScheduler()
 
 ipcMain.handle("refresh_captcha", async ()=>{
     return await fetch(jwc_captcha_url,{
@@ -121,10 +125,12 @@ ipcMain.handle('init_urp_login', async () => {
     }).then(response => {
         // console.log(response)
         console.log(response.headers.get('set-cookie').split(';')[0])
+        // eslint-disable-next-line no-import-assign
         JSESSIONID = response.headers.get('set-cookie').split(';')[0];
         return response.text()
     }).then(text => {
         let regexp = /id="tokenValue" name="tokenValue" value="(.*?)"/ium
+        // eslint-disable-next-line no-import-assign
         tokenValue = text.match(regexp)[1];
 
         // globalCurriculum.updateCookie(globalCookie);
@@ -168,9 +174,11 @@ ipcMain.handle("post_login_info", async (event,data)=>{
         console.log(response.url);
         if (response.url === jwc_home || response.url === jwc_home + '/') {
             console.log('登陆成功');
+            // eslint-disable-next-line no-import-assign
             isLogin = true;
 
             courseQueryWorker.setJSESSIONID(JSESSIONID)
+            config.JSESSIONID = JSESSIONID
 
             return {
                 'status': 'success',
@@ -197,7 +205,46 @@ ipcMain.handle('get_course_list',async (event, filter)=>{
     return JSON.stringify(await courseQueryWorker.searchCourse(JSON.parse(filter)))
 })
 
-ipcMain.handle("modify_selection_list", (event, op)=>{
+ipcMain.handle('get_course_list_alt',async (event, filter)=>{
+    return JSON.stringify(await  courseQueryWorker.searchCourseAlt(JSON.parse(filter)))
+})
+ipcMain.handle('get_course_list_cached',async ()=>{
+    return JSON.stringify(courseQueryWorker.getCachedCourse())
+})
 
+let pendingIDList = []
+
+ipcMain.handle("modify_selection_list", (event, req)=>{
+    req = JSON.parse(req)
+    switch (req.op) {
+        case "rm":
+            console.log("开始执行删除工作")
+            courseScheduler.rmCourse(req.course_ID)
+            pendingIDList.splice(pendingIDList.findIndex(value => {
+                return value.ID === req.course_ID
+            }),1)
+            break;
+        case "add":
+            console.log("开始执行增加课程工作")
+            courseScheduler.addCourse(
+                Object.assign(Object.create(
+                    Object.getPrototypeOf(
+                        courseQueryWorker.getDesiredCourseByID(req.course_ID)
+                    )
+                ), courseQueryWorker.getDesiredCourseByID(req.course_ID)
+                )
+            )
+            pendingIDList.push(req.course_ID)
+            // courseScheduler.addCourse(JSON.parse(JSON.stringify(courseQueryWorker.getDesiredCourseByID(req.course_ID))))
+            break;
+        case "get cache":
+            console.log("获取pendingList的缓存信息")
+            return JSON.stringify(pendingIDList)
+    }
+    return "success"
+})
+
+ipcMain.handle('refresh_remains', ()=>{
+    courseScheduler.refreshRemain();
 })
 

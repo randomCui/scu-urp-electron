@@ -9,6 +9,8 @@ const jwc_jc = domain + '/j_spring_security_check';
 const jwc_home = domain;
 // 教务系统自由选课提交接口
 const course_select_submit_url = domain + '/student/courseSelect/selectCourse/checkInputCodeAndSubmit';
+// 教务系统测试提交url
+const test_submit_url = 'http://localhost:5000/curriculum/submit';
 // 教务系统自由选课搜索api
 const course_select_search_url = domain + '/student/courseSelect/freeCourse/courseList';
 // 教务系统选课页面
@@ -27,6 +29,10 @@ const delete_course_entry_url = domain + '/student/courseSelect/quitCourse/index
 const delete_course_submit_url = domain + '/student/courseSelect/delCourse/deleteOne';
 
 const http_head = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/14.0.835.163 Safari/535.1";
+
+const zhjwjs_url = 'http://zhjwjs.scu.edu.cn/teacher/personalSenate/giveLessonInfo/thisSemesterClassSchedule/indexPublic'
+const zhjwjs_search_url = 'http://zhjwjs.scu.edu.cn/teacher/personalSenate/giveLessonInfo/thisSemesterClassSchedule/getCourseArragementPublic'
+
 
 let JSESSIONID = '';
 let isLogin = false;
@@ -48,4 +54,9 @@ module.exports = {
     course_query_waiting_for_result_url,
     delete_course_entry_url,
     delete_course_submit_url,
+
+    zhjwjs_url,
+    zhjwjs_search_url,
+
+    test_submit_url
 }
