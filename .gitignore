@@ -27,3 +27,5 @@ pnpm-debug.log*
 
 #Test File
 /test
+
+package-lock.json

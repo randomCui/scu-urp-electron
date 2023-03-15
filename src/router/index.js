@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from "../views/LoginView.vue";
 import SelectCourseVIew from "@/views/SelectCourseVIew.vue";
+import CourseScheduleView from "@/views/CourseScheduleView.vue";
 
 const routes = [
   {
@@ -26,6 +27,11 @@ const routes = [
     path: '/select-course',
     name: 'select course',
     component: SelectCourseVIew
+  },
+  {
+    path: '/course-scheduler',
+    name: 'path scheduler',
+    component: CourseScheduleView
   }
 ]
 
