@@ -91,9 +91,11 @@ const {jwc_entry_url, jwc_jc, jwc_captcha_url, jwc_home, http_head} = require('.
 
 let JSESSIONID;
 let tokenValue;
-let globalCookie;
 let isLogin = false;
 // let planNumber;
+import CourseQuery from "../src/js/queryCourse"
+
+let courseQueryWorker = new CourseQuery(JSESSIONID)
 
 ipcMain.handle("refresh_captcha", async ()=>{
     return await fetch(jwc_captcha_url,{
@@ -120,7 +122,6 @@ ipcMain.handle('init_urp_login', async () => {
         // console.log(response)
         console.log(response.headers.get('set-cookie').split(';')[0])
         JSESSIONID = response.headers.get('set-cookie').split(';')[0];
-        globalCookie = response.headers.get('set-cookie').split(';')[0];
         return response.text()
     }).then(text => {
         let regexp = /id="tokenValue" name="tokenValue" value="(.*?)"/ium
@@ -132,7 +133,7 @@ ipcMain.handle('init_urp_login', async () => {
 
         return fetch(jwc_captcha_url, {
             headers: {
-                'Cookie': globalCookie,
+                'Cookie': JSESSIONID,
                 'User-Agent': http_head,
             },
         })
@@ -168,6 +169,9 @@ ipcMain.handle("post_login_info", async (event,data)=>{
         if (response.url === jwc_home || response.url === jwc_home + '/') {
             console.log('登陆成功');
             isLogin = true;
+
+            courseQueryWorker.setJSESSIONID(JSESSIONID)
+
             return {
                 'status': 'success',
                 'message': '登陆成功'
@@ -189,50 +193,11 @@ ipcMain.handle('urp_login_state',()=>{
     return JSON.stringify(isLogin);
 })
 
+ipcMain.handle('get_course_list',async (event, filter)=>{
+    return JSON.stringify(await courseQueryWorker.searchCourse(JSON.parse(filter)))
+})
 
+ipcMain.handle("modify_selection_list", (event, op)=>{
 
+})
 
-// ipcMain.handle('urp_login', async (event, post_data) => {
-//     const md5 = require('md5')
-//     post_data['j_password'] = md5(post_data['j_password'])
-//     if (tokenValue) {
-//         post_data['tokenValue'] = tokenValue;
-//     }
-//     console.log(post_data)
-//     console.log(JSESSIONID)
-//     return await fetch(jwc_jc, {
-//         method: 'POST',
-//         headers: {
-//             'Accept-Language': 'zh-CN,zh;q=0.9',
-//             'Cookie': JSESSIONID,
-//             'User-Agent': http_head,
-//         },
-//         body: new URLSearchParams(post_data),
-//     }).then((response) => {
-//         console.log(response.url);
-//         if (response.url === jwc_home || response.url === jwc_home + '/') {
-//             console.log('登陆成功');
-//             isLogin = true;
-//
-//             const {getPlanNumber} = require('./src/js/urp_login');
-//             getPlanNumber(globalCookie).then(promise => {
-//                 planNumber = promise;
-//                 globalCourseScheduler.updateProgramPlanNumber(planNumber);
-//                 globalCourseDeleter.updateProgramPlanNumber(planNumber);
-//             })
-//
-//             return {
-//                 'status': 'success',
-//                 'message': '登陆成功'
-//             };
-//         } else {
-//             let url = new URL(response.url);
-//             let errorCode = url.searchParams.get('errorCode');
-//             console.log('登陆失败' + errorCode)
-//             return {
-//                 'status': 'failed',
-//                 'message': '登陆失败' + errorCode,
-//             }
-//         }
-//     })
-// })

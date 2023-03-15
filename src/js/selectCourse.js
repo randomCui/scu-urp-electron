@@ -2,38 +2,36 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 
 const {course_select_submit_url, http_head} = require('../config/config');
 
-class DesiredCourse {
-    constructor({
-                    'kch': ID,
-                    'kxh': subID,
-                    'kcm': name,
-                    'zxjxjhh': semester,
-                    ...rest
-                }) {
-        this.ID = ID;
-        this.subID = subID;
-        this.semester = semester;
-        this.name = name;
+const {courseList} = require("../../test/自由选课-查询微积分")
 
-        this.UID = this.ID + '_' + this.subID + '_' + this.semester + '_' + this.name;
+class DesiredCourse {
+    constructor(courseObject) {
+        courseObject = courseList.rwRxkZlList[0]
+        this.ID = courseObject.id  // 该课程在教务处的唯一排序号
+        this.number = courseObject.kch  // 课程号
+        this.seqNumber = courseObject.kxh;  // 课序号
+        this.semester = courseObject.zxjxjhh;  // 执行教学计划号?
+        this.name = courseObject.kcm;  // 课程名
+        this.teacher = courseObject.skjs  // 授课教师
+
+        // this.UID = this.ID + '_' + this.subID + '_' + this.semester + '_' + this.name;
 
         this.programPlanNumber = undefined;
-        this.token = undefined;
-        for (let [key, value] of Object.entries(rest)) {
-            this[key] = value;
-        }
-        this.triedTimes = 0;
-        this.lastSubmitStartTime = undefined;
-        this.lastSubmitFinishTime = undefined;
-        this.firstStartTime = undefined;
-        // 有
+        // this.token = undefined;
+
+        this.triedTimes = 0;  // 重试次数
+        this.lastSubmitStartTime = undefined;  // 最后提交时间
+        this.lastSubmitFinishTime = undefined;  // 最后提交完成时间
+        this.firstStartTime = undefined;  // 最初启动时间
+
+        // 四种状态
+        this.status = 'suspend';
         // pending (等待响应)
         // suspend (暂停)
         // waiting (等待下一次轮询)
         // submitted (提交成功)
-        // 四种状态
-        this.status = 'suspend';
-        this.forceStop = false;
+
+        this.stopSignal = false;
         this.eventlog = [];
 
         this.interval = 1000;
@@ -56,7 +54,7 @@ class DesiredCourse {
      */
     makePost() {
         let make_kcIDs = () => {
-            return [this.ID, this.subID, this.semester].join('@')
+            return [this.number, this.seqNumber, this.semester].join('@')
         }
         let make_kcms = () => {
             let convertedString = '';
@@ -74,7 +72,7 @@ class DesiredCourse {
             'searchtj': this.name,  // 搜索条件
             'kclbdm': '',
             'inputcode': '',
-            'tokenValue': this.token,
+            // 'tokenValue': this.token,
         }
     }
 
@@ -111,26 +109,13 @@ class DesiredCourse {
     }
 
     toJSON() {
-        let translateMap = new Map(
-            Object.entries({
-                'ID': 'kch',
-                'subID': 'kxh',
-                'semester': 'zxjxjhh',
-                'name': 'kcm',
-            })
-        );
-        let json = {};
-        for (let [key, value] of Object.entries(this)) {
-            if (key === 'postPayload')
-                continue;
-            if (key === 'timeoutID')
-                continue;
-            if (key === 'waitingQueue')
-                continue;
-            let newKey = translateMap.get(key) || key;
-            json[newKey] = value;
+        return {
+            name: this.name,
+            number: this.number,
+            seqNumber: this.number,
+            teacher: this.teacher,
+            semester: this.semester,
         }
-        return json;
     }
 
     startQuery(cookie, programPlanNumber, waitingQueue) {

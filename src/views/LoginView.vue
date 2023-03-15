@@ -33,14 +33,20 @@ export default {
       studentID: "",
       password: "",
       captcha: "",
-      isLogin: true,
+      isLogin: window.localStorage.getItem("isLogin")==="true" || true,
     }
   },
   mounted() {
     /* eslint-disable*/
+    this.isLogin = window.localStorage.getItem("isLogin")==="true" || true;
     window.ipc.invoke("urp_login_state").then(state=>{
       console.log(JSON.parse(state))
       this.isLogin = JSON.parse(state);
+      if(JSON.parse(state)){
+        window.localStorage.setItem("isLogin", "true")
+      }else{
+        window.localStorage.setItem("isLogin", "false")
+      }
       return JSON.parse(state)
     }).then((isLogin)=>{
       if(!isLogin) {
@@ -53,7 +59,7 @@ export default {
   },
   methods:{
     onLoginButtonPressed(){
-      console.log(this.studentID,this.password,this.captcha)
+      // console.log(this.studentID,this.password,this.captcha)
       window.ipc.invoke("post_login_info",JSON.stringify({
         student_id : this.studentID,
         password: this.password,
