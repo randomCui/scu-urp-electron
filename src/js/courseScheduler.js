@@ -1,5 +1,7 @@
 import config from "@/config/webSessionEssential";
 import {
+    course_query_waiting_for_result_url,
+    course_query_waiting_for_url,
     course_select_entry_url,
     course_select_search_url, course_select_submit_url,
     // course_select_submit_url,
@@ -35,7 +37,9 @@ export class CourseScheduler{
         console.log(config)
         let course_number_set = new Set()
         // 计算课序号集合，减少查询次数
-        for(let course of this.pendingList){
+        for(let course of this.pendingList.filter(value => {
+            return value.status === "queuing"
+        })){
             course_number_set.add(course.number)
         }
         for(let course_number of course_number_set.values()){
@@ -62,14 +66,17 @@ export class CourseScheduler{
                     let matched_course = this.pendingList.find(value => {
                         return value.ID === course.id
                     })
-
                     if(!matched_course){
                         continue;
                     }
-                    console.log("匹配导一个")
+                    matched_course.updateStatus("pending")
+                    console.log("匹配第一个")
                     matched_course.remain = course['bkskyl']
-                    if (matched_course.remain > 0){
-                        // await this.submitCourse(matched_course)
+                    if (matched_course.remain > 0) {
+                        matched_course.updateStatus("submitted")
+                        await this.submitCourse(matched_course)
+                    }else{
+                        matched_course.updateStatus("queuing")
                     }
                 }
             })
@@ -106,11 +113,75 @@ export class CourseScheduler{
         }).then(json => {
             console.log(json);
             if (json['result'] === 'ok') {
-                // this.updateStatus('submitted');
-                // this.queryWaitingFor();
+                course.updateStatus('success');
+                course.eventlog.push("已提交 成功 正在查询选课结果")
+                this.queryWaitingFor(course);
+            }else{
+                course.updateStatus("suspend")
+                course.eventlog.push("已提交 未成功 自动暂停")
+            }
+        })
+    }
+
+    async queryWaitingFor(course) {
+        const {course_query_waiting_for_url} = require('../config/config');
+        let queryPost = this.makePost(course);
+        delete queryPost.tokenValue;
+        delete queryPost.inputcode;
+        let queryPayload = await fetch(course_query_waiting_for_url, {
+            method: 'POST',
+            headers: {
+                'Cookie': config.JSESSIONID,
+                'User-Agent': http_head,
+            },
+            body: new URLSearchParams(queryPost),
+        }).then(response => {
+            return response.text()
+        }).then(text => {
+            return {
+                'kcNum': text.match(/var kcNum = "(.*?)"/)[1],
+                'redisKey': text.match(/var redisKey = "(.*?)"/)[1],
+            }
+        })
+        setTimeout(this.queryWaitingForResult.bind(this), 1000, course, queryPayload, 0);
+    }
+    async queryWaitingForResult(course, payload, retry) {
+        const {course_query_waiting_for_result_url} = require('../config/config');
+        if (retry > 10) {
+            console.log('可能出现问题');
+            course.updateStatus('suspend');
+            course.eventlog.push("尝试查询是否选中超时 已自动暂停")
+            return;
+        }
+        let isFinish = false;
+
+        await fetch(course_query_waiting_for_result_url, {
+            method: 'POST',
+            headers: {
+                'Cookie': config.JSESSIONID,
+                'User-Agent': http_head,
+            },
+            body: new URLSearchParams(payload),
+        }).then(response => {
+            return response.json();
+        }).then(json => {
+            if (json['isFinish'] === true) {
+                console.log(json['result'])
+                isFinish = true;
+                course.eventlog.push(json['result']);
+            }else{
+                course.eventlog.push(`第${retry}次查询无结果`);
             }
         })
 
+        if (isFinish)
+            return;
+
+        setTimeout(this.queryWaitingForResult.bind(this), 1000, course, payload, retry + 1);
+    }
+
+    get_pending_list(){
+        return this.pendingList
     }
 
     makePost(course) {
@@ -137,4 +208,5 @@ export class CourseScheduler{
             'tokenValue': this.tokenValue,
         }
     }
+
 }
