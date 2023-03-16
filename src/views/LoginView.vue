@@ -53,6 +53,15 @@ export default {
         window.ipc.invoke("init_urp_login").then(res => {
           this.captchaUrl = URL.createObjectURL(new Blob([res], { type: "image/jpeg" }));
         });
+        window.ipc.invoke("login_info_file",JSON.stringify({
+          op: "read"
+        })).then(res=>{
+          res = JSON.parse(res)
+          if(res.status === "success") {
+            this.password = res.password
+            this.studentID = res.studentID
+          }
+        })
       }
     });
 

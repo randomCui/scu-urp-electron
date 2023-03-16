@@ -99,6 +99,8 @@ import { CourseScheduler } from "@/js/courseScheduler";
 
 // let planNumber;
 import CourseQuery from "../src/js/queryCourse";
+import { deleteCourse } from "@/js/deleteCourse";
+import { readLoginInfo, saveLoginInfo } from "@/js/rememberMe";
 
 let courseQueryWorker = new CourseQuery();
 let courseScheduler = new CourseScheduler();
@@ -155,7 +157,8 @@ ipcMain.handle("init_urp_login", async () => {
 ipcMain.handle("post_login_info", async (event, data) => {
   let { student_id, password, captcha } = JSON.parse(data);
   const md5 = require("md5");
-  console.log(student_id, password, captcha);
+  // console.log(student_id, password, captcha);
+  saveLoginInfo(student_id,password)
   let post_data = {
     "j_username": student_id,
     "j_password": md5(password),
@@ -197,6 +200,19 @@ ipcMain.handle("post_login_info", async (event, data) => {
     }
   });
 });
+
+ipcMain.handle("login_info_file",(event, data)=>{
+  data = JSON.parse(data);
+  switch(data.op){
+    case "write":
+      saveLoginInfo(data.student_ID,data.password)
+      return JSON.stringify({status:"success"})
+    case "read":
+      let result = readLoginInfo()
+      return JSON.stringify(result)
+  }
+
+})
 
 ipcMain.handle("urp_login_state", () => {
   console.log(isLogin);
@@ -266,4 +282,24 @@ ipcMain.handle("modify_pending_list", (event, req) => {
   }
   return JSON.stringify({ state: "success" });
 });
+
+ipcMain.handle("delete_course",(event,id)=>{
+  console.log(id)
+  deleteCourse()
+})
+
+// async function is_course_selection_time() {
+//     const {course_select_entry_url} = require('../config/config')
+//     return fetch(course_select_entry_url, {
+//         headers: {
+//             'Cookie': this.cookie,
+//             'User-Agent': http_head,
+//         },
+//     }).then((response) => {
+//         return response.text();
+//     }).then((text) => {
+//         // console.log(text);
+//         return text.includes('自由选课');
+//     })
+// }
 
