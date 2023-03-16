@@ -248,3 +248,20 @@ ipcMain.handle('refresh_remains', async ()=>{
     await courseScheduler.refreshRemain();
 })
 
+ipcMain.handle("modify_pending_list",(event, req)=>{
+    req = JSON.parse(req)
+    switch(req.op){
+        case "rm":
+            console.log("准备删除待抢课表课程")
+            courseScheduler.rmCourse(req.course_ID)
+            pendingIDList.splice(pendingIDList.findIndex(value => {
+                return value.ID === req.course_ID
+            }),1)
+            break;
+        case "get list":
+            console.log("获取抢课表信息")
+            return JSON.stringify(courseScheduler.get_pending_list());
+    }
+    return JSON.stringify({ state: "success" })
+})
+

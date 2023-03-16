@@ -33,13 +33,15 @@ export class DesiredCourse {
         this.lastSubmitStartTime = undefined;  // 最后提交时间
         this.lastSubmitFinishTime = undefined;  // 最后提交完成时间
         this.firstStartTime = undefined;  // 最初启动时间
+        this.lastQueryTimeElapse = 0;
 
         // 四种状态
-        this.status = 'suspend';
+        this.status = 'queuing';
         // pending (等待响应)
         // suspend (暂停)
         // waiting (等待下一次轮询)
         // submitted (提交成功)
+        // success (选课成功)
 
         this.stopSignal = false;
         this.eventlog = [];
@@ -92,29 +94,43 @@ export class DesiredCourse {
 
     updateStatus(occasion) {
         this.status = occasion;
-        if (occasion === 'pending') {
-            this.triedTimes += 1;
-            this.lastSubmitStartTime = Date.now();
+        switch (occasion){
+            case "queuing":
+                this.lastSubmitFinishTime = new Date();
+                this.lastQueryTimeElapse = this.lastSubmitFinishTime - this.lastSubmitStartTime || 0
+                break;
+            case "pending":
+                this.lastSubmitStartTime = new Date();
+                this.triedTimes += 1;
+                break;
+            case "submitted":
 
-        } else if (occasion === 'queue') {
-            this.lastSubmitFinishTime = Date.now();
 
-        } else if (occasion === 'suspend') {
-            this.forceStop = true;
-            this.triedTimes = 0;
-            this.lastSubmitFinishTime = Date.now();
-
-        } else if (occasion === 'submitted') {
-            this.forceStop = true;
-            this.lastSubmitFinishTime = Date.now();
-
-        } else if (occasion === 'success') {
-            this.forceStop = true;
-        } else if (occasion === 'init') {
-            this.status = 'queue';
-            this.firstStartTime = Date.now();
-            this.lastSubmitStartTime = Date.now();
         }
+        // this.status = occasion;
+        // if (occasion === 'pending') {
+        //     this.triedTimes += 1;
+        //     this.lastSubmitStartTime = Date.now();
+        //
+        // } else if (occasion === 'queue') {
+        //     this.lastSubmitFinishTime = Date.now();
+        //
+        // } else if (occasion === 'suspend') {
+        //     this.forceStop = true;
+        //     this.triedTimes = 0;
+        //     this.lastSubmitFinishTime = Date.now();
+        //
+        // } else if (occasion === 'submitted') {
+        //     this.forceStop = true;
+        //     this.lastSubmitFinishTime = Date.now();
+        //
+        // } else if (occasion === 'success') {
+        //     this.forceStop = true;
+        // } else if (occasion === 'init') {
+        //     this.status = 'queue';
+        //     this.firstStartTime = Date.now();
+        //     this.lastSubmitStartTime = Date.now();
+        // }
 
     }
 
@@ -133,7 +149,11 @@ export class DesiredCourse {
             startSection: this.startSection,
             duringSection: this.duringSection,
             capacity: this.capacity,
-            remain: this.remain
+            remain: this.remain,
+            lastQueryTimeElapse: this.lastQueryTimeElapse,
+            status: this.status,
+            triedTimes: this.triedTimes,
+            eventlog: this.eventlog,
         }
     }
 
@@ -323,201 +343,201 @@ export class DesiredCourse {
 
 }
 
-class CourseScheduler {
-    constructor(cookie, programPlanNumber) {
-        this.cookie = cookie;
-        this.pendingList = [];
-        this.keepSeeking = true;
-        this.searchContext = [];
-        this.programPlanNumber = programPlanNumber;
-        this.fetchQueue = [];
-        this.startQueue();
-    }
-
-    async startQueue() {
-        setTimeout(this.queueExecutor.bind(this), 0);
-    }
-
-    async queueExecutor() {
-        // console.log(this.fetchQueue);
-        while (this.fetchQueue.length > 0) {
-            let queueHead = this.fetchQueue.shift();
-            if (queueHead.status !== 'queue') {
-                continue;
-            }
-            await queueHead.start(this.cookie, this.programPlanNumber).catch(reason => {
-                console.log(reason);
-                queueHead.updateStatus('queue');
-            });
-        }
-        setTimeout(this.queueExecutor.bind(this), 100);
-    }
-
-    async start() {
-        for (let course of this.pendingList) {
-            course.startQuery(this.cookie, this.programPlanNumber, this.fetchQueue);
-        }
-    }
-
-    // async startAll() {
-    //     this.pendingList.forEach(task => {
-    //         // do something
-    //     });
-    //     await this.start();
-    // }
-
-    async stopAll() {
-        this.pendingList.forEach(task => {
-            // task.setEnableStatus(false);
-            task.stopQuery();
-        });
-
-    }
-
-    async searchCourse(searchtj) {
-        const {course_select_search_url, http_head} = require('../config/config');
-        return fetch(course_select_search_url, {
-            method: 'POST',
-            headers: {
-                'User-Agent': http_head,
-                'cookie': this.cookie,
-            },
-            body: new URLSearchParams(searchtj),
-        }).then(response => {
-            // console.log(response)
-            return response.text();
-        }).then(text => {
-            // console.log(text)
-            this.searchContext = JSON.parse(text)['rwRxkZlList'];
-            return text;
-        })
-    }
-
-    // async searchCourseAlt(payload) {
-    //     const {zhjwjs_url, zhjwjs_search_url} = require('../test/test_config');
-    //     return await fetch(zhjwjs_url).then(response => {
-    //         return response.headers.get('set-cookie').split(';')[0];
-    //     }).then(cookie => {
-    //         return fetch(zhjwjs_search_url, {
-    //             method: 'POST',
-    //             headers: {
-    //                 'User-Agent': http_head,
-    //                 'cookie': cookie,
-    //             },
-    //             body: new URLSearchParams(payload),
-    //         })
-    //     }).then(response => {
-    //         // console.log(response)
-    //         return response.text();
-    //     }).then(text => {
-    //         this.searchContext = JSON.parse(text)['list']['records'];
-    //         return text;
-    //     })
-    // }
-
-    addCourse(course) {
-        let matchingCourse = this.findMatchingCourse(course);
-        // console.log(matchingCourse);
-        if (!matchingCourse) {
-            return {
-                'code': -2,
-                'message': '未在搜索结果中找到对应课程:' + course['kcm']
-            }
-        }
-        if (this.isDuplicatedCourse(matchingCourse) !== -1) {
-            return {
-                'code': -1,
-                'message': course['kcm'] + '已存在重复课程，添加失败'
-            }
-        }
-        let temp = new DesiredCourse(course);
-        temp.setProgramPlanNumber(this.programPlanNumber);
-        this.pendingList.push(temp);
-        return {
-            'code': 1,
-            'message': course['kcm'] + '已成功添加'
-        }
-    }
-
-    deleteCourse(course) {
-        let index = this.findMatchingCourseIndex(course);
-        // console.log(index);
-        if (index !== -1)
-            this.pendingList.splice(index, 1);
-    }
-
-    findMatchingCourse(course) {
-        // 应该是要从searchContext里面找到课程
-        return this.searchContext.find((oriCourseInfo) => {
-            let flag = true;
-            if (course['kch'] !== oriCourseInfo['kch'] ||
-                course['kxh'] !== oriCourseInfo['kxh'] ||
-                course['zxjxjhh'] !== oriCourseInfo['zxjxjhh'] ||
-                course['kcm'] !== oriCourseInfo['kcm'])
-                flag = false;
-            return flag
-        })
-    }
-
-    findMatchingCourseIndex(course) {
-        return this.pendingList.findIndex((storedCourse) => {
-            let flag = true;
-            if (course['kch'] !== storedCourse.ID ||
-                course['kxh'] !== storedCourse.subID ||
-                course['zxjxjhh'] !== storedCourse.semester ||
-                course['kcm'] !== storedCourse.name)
-                flag = false;
-
-            return flag
-        })
-    }
-
-    isDuplicatedCourse(course) {
-        return this.findMatchingCourseIndex(course);
-    }
-
-    updateCookie(cookie) {
-        this.cookie = cookie;
-    }
-
-    updateProgramPlanNumber(programPlanNumber) {
-        this.programPlanNumber = programPlanNumber;
-    }
-
-    updateInterval(courseInfo, interval) {
-        let index = this.findMatchingCourseIndex(courseInfo);
-        if (index !== -1)
-            this.pendingList[index].interval = interval;
-    }
-
-    getPendingListJson() {
-        let jsonList = []
-        this.pendingList.forEach(course => {
-            jsonList.push(course.toJSON())
-        })
-        // console.log(jsonList);
-        return jsonList;
-    }
-
-    /**************
-     * 检查是否在选课时间
-     * @returns {Promise<boolean>}如果在选课时间返回true  否则返回false
-     */
-    async is_course_selection_time() {
-        const {course_select_entry_url} = require('../config/config')
-        return fetch(course_select_entry_url, {
-            headers: {
-                'Cookie': this.cookie,
-                'User-Agent': http_head,
-            },
-        }).then((response) => {
-            return response.text();
-        }).then((text) => {
-            // console.log(text);
-            return text.includes('自由选课');
-        })
-    }
-}
+// class CourseScheduler {
+//     constructor(cookie, programPlanNumber) {
+//         this.cookie = cookie;
+//         this.pendingList = [];
+//         this.keepSeeking = true;
+//         this.searchContext = [];
+//         this.programPlanNumber = programPlanNumber;
+//         this.fetchQueue = [];
+//         this.startQueue();
+//     }
+//
+//     async startQueue() {
+//         setTimeout(this.queueExecutor.bind(this), 0);
+//     }
+//
+//     async queueExecutor() {
+//         // console.log(this.fetchQueue);
+//         while (this.fetchQueue.length > 0) {
+//             let queueHead = this.fetchQueue.shift();
+//             if (queueHead.status !== 'queue') {
+//                 continue;
+//             }
+//             await queueHead.start(this.cookie, this.programPlanNumber).catch(reason => {
+//                 console.log(reason);
+//                 queueHead.updateStatus('queue');
+//             });
+//         }
+//         setTimeout(this.queueExecutor.bind(this), 100);
+//     }
+//
+//     async start() {
+//         for (let course of this.pendingList) {
+//             course.startQuery(this.cookie, this.programPlanNumber, this.fetchQueue);
+//         }
+//     }
+//
+//     // async startAll() {
+//     //     this.pendingList.forEach(task => {
+//     //         // do something
+//     //     });
+//     //     await this.start();
+//     // }
+//
+//     async stopAll() {
+//         this.pendingList.forEach(task => {
+//             // task.setEnableStatus(false);
+//             task.stopQuery();
+//         });
+//
+//     }
+//
+//     async searchCourse(searchtj) {
+//         const {course_select_search_url, http_head} = require('../config/config');
+//         return fetch(course_select_search_url, {
+//             method: 'POST',
+//             headers: {
+//                 'User-Agent': http_head,
+//                 'cookie': this.cookie,
+//             },
+//             body: new URLSearchParams(searchtj),
+//         }).then(response => {
+//             // console.log(response)
+//             return response.text();
+//         }).then(text => {
+//             // console.log(text)
+//             this.searchContext = JSON.parse(text)['rwRxkZlList'];
+//             return text;
+//         })
+//     }
+//
+//     // async searchCourseAlt(payload) {
+//     //     const {zhjwjs_url, zhjwjs_search_url} = require('../test/test_config');
+//     //     return await fetch(zhjwjs_url).then(response => {
+//     //         return response.headers.get('set-cookie').split(';')[0];
+//     //     }).then(cookie => {
+//     //         return fetch(zhjwjs_search_url, {
+//     //             method: 'POST',
+//     //             headers: {
+//     //                 'User-Agent': http_head,
+//     //                 'cookie': cookie,
+//     //             },
+//     //             body: new URLSearchParams(payload),
+//     //         })
+//     //     }).then(response => {
+//     //         // console.log(response)
+//     //         return response.text();
+//     //     }).then(text => {
+//     //         this.searchContext = JSON.parse(text)['list']['records'];
+//     //         return text;
+//     //     })
+//     // }
+//
+//     addCourse(course) {
+//         let matchingCourse = this.findMatchingCourse(course);
+//         // console.log(matchingCourse);
+//         if (!matchingCourse) {
+//             return {
+//                 'code': -2,
+//                 'message': '未在搜索结果中找到对应课程:' + course['kcm']
+//             }
+//         }
+//         if (this.isDuplicatedCourse(matchingCourse) !== -1) {
+//             return {
+//                 'code': -1,
+//                 'message': course['kcm'] + '已存在重复课程，添加失败'
+//             }
+//         }
+//         let temp = new DesiredCourse(course);
+//         temp.setProgramPlanNumber(this.programPlanNumber);
+//         this.pendingList.push(temp);
+//         return {
+//             'code': 1,
+//             'message': course['kcm'] + '已成功添加'
+//         }
+//     }
+//
+//     deleteCourse(course) {
+//         let index = this.findMatchingCourseIndex(course);
+//         // console.log(index);
+//         if (index !== -1)
+//             this.pendingList.splice(index, 1);
+//     }
+//
+//     findMatchingCourse(course) {
+//         // 应该是要从searchContext里面找到课程
+//         return this.searchContext.find((oriCourseInfo) => {
+//             let flag = true;
+//             if (course['kch'] !== oriCourseInfo['kch'] ||
+//                 course['kxh'] !== oriCourseInfo['kxh'] ||
+//                 course['zxjxjhh'] !== oriCourseInfo['zxjxjhh'] ||
+//                 course['kcm'] !== oriCourseInfo['kcm'])
+//                 flag = false;
+//             return flag
+//         })
+//     }
+//
+//     findMatchingCourseIndex(course) {
+//         return this.pendingList.findIndex((storedCourse) => {
+//             let flag = true;
+//             if (course['kch'] !== storedCourse.ID ||
+//                 course['kxh'] !== storedCourse.subID ||
+//                 course['zxjxjhh'] !== storedCourse.semester ||
+//                 course['kcm'] !== storedCourse.name)
+//                 flag = false;
+//
+//             return flag
+//         })
+//     }
+//
+//     isDuplicatedCourse(course) {
+//         return this.findMatchingCourseIndex(course);
+//     }
+//
+//     updateCookie(cookie) {
+//         this.cookie = cookie;
+//     }
+//
+//     updateProgramPlanNumber(programPlanNumber) {
+//         this.programPlanNumber = programPlanNumber;
+//     }
+//
+//     updateInterval(courseInfo, interval) {
+//         let index = this.findMatchingCourseIndex(courseInfo);
+//         if (index !== -1)
+//             this.pendingList[index].interval = interval;
+//     }
+//
+//     getPendingListJson() {
+//         let jsonList = []
+//         this.pendingList.forEach(course => {
+//             jsonList.push(course.toJSON())
+//         })
+//         // console.log(jsonList);
+//         return jsonList;
+//     }
+//
+//     /**************
+//      * 检查是否在选课时间
+//      * @returns {Promise<boolean>}如果在选课时间返回true  否则返回false
+//      */
+//     async is_course_selection_time() {
+//         const {course_select_entry_url} = require('../config/config')
+//         return fetch(course_select_entry_url, {
+//             headers: {
+//                 'Cookie': this.cookie,
+//                 'User-Agent': http_head,
+//             },
+//         }).then((response) => {
+//             return response.text();
+//         }).then((text) => {
+//             // console.log(text);
+//             return text.includes('自由选课');
+//         })
+//     }
+// }
 
 
 // module.exports = {
