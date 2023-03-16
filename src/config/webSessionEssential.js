@@ -1,6 +1,6 @@
 export default {
-    JSESSIONID: null,
-    tokenValue: "",
-    isLogin: false,
-}
+  JSESSIONID: null,
+  tokenValue: "",
+  isLogin: false
+};
 

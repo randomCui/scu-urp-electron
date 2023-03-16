@@ -27,55 +27,55 @@
 
 export default {
   name: "LoginView",
-  data(){
-    return{
+  data() {
+    return {
       captchaUrl: undefined,
       studentID: "",
       password: "",
       captcha: "",
-      isLogin: window.localStorage.getItem("isLogin")==="true" || true,
-    }
+      isLogin: window.localStorage.getItem("isLogin") === "true" || true
+    };
   },
   mounted() {
     /* eslint-disable*/
-    this.isLogin = window.localStorage.getItem("isLogin")==="true" || true;
-    window.ipc.invoke("urp_login_state").then(state=>{
-      console.log(JSON.parse(state))
+    this.isLogin = window.localStorage.getItem("isLogin") === "true" || true;
+    window.ipc.invoke("urp_login_state").then(state => {
+      console.log(JSON.parse(state));
       this.isLogin = JSON.parse(state);
-      if(JSON.parse(state)){
-        window.localStorage.setItem("isLogin", "true")
-      }else{
-        window.localStorage.setItem("isLogin", "false")
+      if (JSON.parse(state)) {
+        window.localStorage.setItem("isLogin", "true");
+      } else {
+        window.localStorage.setItem("isLogin", "false");
       }
-      return JSON.parse(state)
-    }).then((isLogin)=>{
-      if(!isLogin) {
+      return JSON.parse(state);
+    }).then((isLogin) => {
+      if (!isLogin) {
         window.ipc.invoke("init_urp_login").then(res => {
-          this.captchaUrl = URL.createObjectURL(new Blob([res], {type: "image/jpeg"}))
-        })
+          this.captchaUrl = URL.createObjectURL(new Blob([res], { type: "image/jpeg" }));
+        });
       }
-    })
+    });
 
   },
-  methods:{
-    onLoginButtonPressed(){
+  methods: {
+    onLoginButtonPressed() {
       // console.log(this.studentID,this.password,this.captcha)
-      window.ipc.invoke("post_login_info",JSON.stringify({
-        student_id : this.studentID,
+      window.ipc.invoke("post_login_info", JSON.stringify({
+        student_id: this.studentID,
         password: this.password,
         captcha: this.captcha
-      })).then(res=>{
-        console.log(res)
-        window.ipc.invoke("urp_login_state",(state)=>{
-          this.isLogin = JSON.parse(state)
-        })
-      })
+      })).then(res => {
+        console.log(res);
+        window.ipc.invoke("urp_login_state", (state) => {
+          this.isLogin = JSON.parse(state);
+        });
+      });
     },
-    async refreshCaptcha(){
+    async refreshCaptcha() {
       /* eslint-disable*/
-      window.ipc.invoke("refresh_captcha").then(data=>{
-        this.captchaUrl= URL.createObjectURL(new Blob([data],{type: "image/jpeg"}))
-      })
+      window.ipc.invoke("refresh_captcha").then(data => {
+        this.captchaUrl = URL.createObjectURL(new Blob([data], { type: "image/jpeg" }));
+      });
     }
   }
 };
@@ -102,7 +102,7 @@ div.login-plate {
   text-align: center;
 }
 
-.login-wrapper > div > input.captcha-input{
+.login-wrapper > div > input.captcha-input {
   display: inline;
 
   padding: calc((30px - 1em) / 2) 0.5em;
@@ -118,6 +118,7 @@ div.login-plate {
   text-align: center;
   max-width: calc(100% - 7em - 96px);
 }
+
 .login-wrapper > div > img {
   display: inline;
 
@@ -125,10 +126,11 @@ div.login-plate {
   height: 2em
 }
 
-.login-btn{
+.login-btn {
   display: flex;
   justify-content: center;
 }
+
 .login-btn > div {
   display: inline;
   text-align: center;

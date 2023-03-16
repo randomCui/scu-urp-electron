@@ -4,8 +4,9 @@ import {
   zhjwjs_search_url,
   zhjwjs_url
 } from "@/config/config";
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-import { DesiredCourse } from "../js/selectCourse"
+
+const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+import { DesiredCourse } from "@/js/selectCourse";
 import config from "@/config/webSessionEssential";
 
 export default class CourseQuery {
@@ -21,7 +22,7 @@ export default class CourseQuery {
         "Cookie": this.JSESSIONID,
         "User-Agent": http_head
       },
-      method:"POST",
+      method: "POST",
       body: new URLSearchParams({
         kkxks: "",
         kch: filter.number || "",
@@ -31,42 +32,42 @@ export default class CourseQuery {
         jc: 0,
         kclbdm: ""
       })
-    }).then(res=> {
+    }).then(res => {
       return res.json();
-    }).then(json=>{
-      console.log(json)
-      let course_list = []
-      for (let course of json.rwRxkZlList){
-        course_list.push(new DesiredCourse(course))
+    }).then(json => {
+      console.log(json);
+      let course_list = [];
+      for (let course of json.rwRxkZlList) {
+        course_list.push(new DesiredCourse(course));
       }
-      this.cachedCourse = course_list
-      return course_list
+      this.cachedCourse = course_list;
+      return course_list;
     });
   }
 
-  async searchCourseAlt(filter){
+  async searchCourseAlt(filter) {
     let cookie;
     let zxjxjhh = await fetch(zhjwjs_url).then(response => {
-      cookie = response.headers.get('set-cookie').split(';')[0];
-      return response.text()
-    }).then(text=>{
+      cookie = response.headers.get("set-cookie").split(";")[0];
+      return response.text();
+    }).then(text => {
       // console.log(text.match(/<option value="(.*?)"/)[1])
-      return text.match(/<option value="(.*?)"/)[1]
-    })
+      return text.match(/<option value="(.*?)"/)[1];
+    });
     return await fetch(zhjwjs_search_url, {
       headers: {
         "Accept-Language": "zh-CN,zh;q=0.9",
         "Cookie": cookie,
         "User-Agent": http_head
       },
-      method:"POST",
+      method: "POST",
       body: new URLSearchParams({
         zxjxjhh: zxjxjhh,
         kch: filter.number || "",
         kcm: filter.name || "",
         js: filter.teacher || "",
-        kkxs:"",
-        skxq:"",
+        kkxs: "",
+        skxq: "",
         xq: "",
         jxl: "",
         jas: "",
@@ -74,31 +75,31 @@ export default class CourseQuery {
         pageSize: 500,
         kclb: ""
       })
-    }).then(res=> {
+    }).then(res => {
       return res.json();
-    }).then(json=>{
-      console.log(json)
-      let course_list = []
-      for (let course of json.list.records){
-        course_list.push(new DesiredCourse(course))
+    }).then(json => {
+      console.log(json);
+      let course_list = [];
+      for (let course of json.list.records) {
+        course_list.push(new DesiredCourse(course));
       }
-      this.cachedCourse = course_list
-      return course_list
+      this.cachedCourse = course_list;
+      return course_list;
     });
   }
 
-  getCachedCourse(){
-    return this.cachedCourse
+  getCachedCourse() {
+    return this.cachedCourse;
   }
 
-  setJSESSIONID(JSESSIONID){
-    this.JSESSIONID = JSESSIONID
+  setJSESSIONID(JSESSIONID) {
+    this.JSESSIONID = JSESSIONID;
   }
 
-  getDesiredCourseByID(ID){
-    return this.cachedCourse.find((value)=>{
-      return value.ID === ID
-    })
+  getDesiredCourseByID(ID) {
+    return this.cachedCourse.find((value) => {
+      return value.ID === ID;
+    });
   }
 
 }

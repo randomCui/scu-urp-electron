@@ -1,12 +1,16 @@
 <template>
   <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link> |
-    <router-link to="/login">登录</router-link> |
-    <router-link to="/select-course">浏览课程</router-link> |
+    <router-link to="/">Home</router-link>
+    |
+    <router-link to="/about">About</router-link>
+    |
+    <router-link to="/login">登录</router-link>
+    |
+    <router-link to="/select-course">浏览课程</router-link>
+    |
     <router-link to="/course-scheduler">抢课界面</router-link>
   </nav>
-  <router-view/>
+  <router-view />
 </template>
 
 <style lang="less">
