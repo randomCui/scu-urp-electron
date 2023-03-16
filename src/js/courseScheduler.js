@@ -14,6 +14,7 @@ export class CourseScheduler{
     constructor() {
         this.cookie = config.JSESSIONID;
         this.tokenValue = config.tokenValue;
+        this.programPlanNumber = null;
         this.pendingList = [];
     }
 
@@ -68,15 +69,15 @@ export class CourseScheduler{
                     console.log("匹配导一个")
                     matched_course.remain = course['bkskyl']
                     if (matched_course.remain > 0){
-                        await this.submitCourse(matched_course)
+                        // await this.submitCourse(matched_course)
                     }
                 }
             })
         }
     }
 
-    async submitCourse(course_object){
-        // 先拿到tokenValue
+    async submitCourse(course){
+        // 先拿到tokenValue和方案计划号
         await fetch(course_select_entry_url, {
             headers: {
                 'Cookie': config.JSESSIONID,
@@ -85,24 +86,25 @@ export class CourseScheduler{
         }).then(response => {
             return response.text();
         }).then(text => {
-            console.log(text)
             this.tokenValue = text.match(/id="tokenValue" value="(.*?)"/)[1];
+            this.programPlanNumber = text.match(/fajhh=(.*?)'/)[1];
+            // console.log(text.match(/fajhh=(.*?)'/))
         })
 
         // 正式应使用course_select_submit_url
-        console.log(this.makePost());
-        console.log(new URLSearchParams(this.makePost()).toString())
+        console.log(this.makePost(course));
+        console.log(this.makePost(course).toString());
         await fetch(course_select_submit_url, {
             method: 'POST',
             headers: {
-                'Cookie': this.cookie,
+                'Cookie': config.JSESSIONID,
                 'User-Agent': http_head,
             },
-            body: new URLSearchParams(this.makePost(course_object)),
+            body: new URLSearchParams(this.makePost(course)),
         }).then(response => {
             return response.json();
         }).then(json => {
-            // console.log(json);
+            console.log(json);
             if (json['result'] === 'ok') {
                 // this.updateStatus('submitted');
                 // this.queryWaitingFor();
@@ -117,7 +119,7 @@ export class CourseScheduler{
         }
         let make_kcms = () => {
             let convertedString = '';
-            for (let char of course.name) {
+            for (let char of (course.name+'('+course.number+'_'+course.seqNumber+')')) {
                 convertedString += char.charCodeAt(0).toString(10) + ',';
             }
             return convertedString;
@@ -126,13 +128,13 @@ export class CourseScheduler{
             'dealType': 5,
             'kcIds': make_kcIDs(),
             'kcms': make_kcms(),
-            'fajhh': course.programPlanNumber,
+            'fajhh': this.programPlanNumber,
             'sj': '0_0',
-            'searchtj': course.name,  // 搜索条件
+            // 'searchtj': course.name,  // 搜索条件
+            'kkxsh': '',
             'kclbdm': '',
             'inputcode': '',
-            // 'tokenValue': this.tokenValue,
-            'tokenValue': 114514,
+            'tokenValue': this.tokenValue,
         }
     }
 }

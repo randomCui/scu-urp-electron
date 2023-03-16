@@ -244,7 +244,7 @@ ipcMain.handle("modify_selection_list", (event, req)=>{
     return "success"
 })
 
-ipcMain.handle('refresh_remains', ()=>{
-    courseScheduler.refreshRemain();
+ipcMain.handle('refresh_remains', async ()=>{
+    await courseScheduler.refreshRemain();
 })
 
