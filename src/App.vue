@@ -9,6 +9,8 @@
     <router-link to="/select-course">浏览课程</router-link>
     |
     <router-link to="/course-scheduler">抢课界面</router-link>
+    |
+    <router-link to="/delete-course">删除课程</router-link>
   </nav>
   <router-view />
 </template>

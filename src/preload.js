@@ -14,7 +14,9 @@ const validChannels = [
   "get_course_list_cached",
   "modify_selection_list",
   "refresh_remains",
-  "modify_pending_list"
+  "modify_pending_list",
+  "delete_course",
+  "login_info_file"
 ];
 contextBridge.exposeInMainWorld(
   "ipc", {

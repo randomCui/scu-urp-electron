@@ -114,11 +114,11 @@ export class CourseScheduler {
       console.log(json);
       if (json["result"] === "ok") {
         course.updateStatus("success");
-        course.eventlog.push("已提交 成功 正在查询选课结果");
+        course.eventlog.unshift("已提交 成功 正在查询选课结果");
         this.queryWaitingFor(course);
       } else {
         course.updateStatus("suspend");
-        course.eventlog.push("已提交 未成功 自动暂停");
+        course.eventlog.unshift("已提交 未成功 自动暂停");
       }
     });
   }
@@ -151,7 +151,7 @@ export class CourseScheduler {
     if (retry > 10) {
       console.log("可能出现问题");
       course.updateStatus("suspend");
-      course.eventlog.push("尝试查询是否选中超时 已自动暂停");
+      course.eventlog.unshift("尝试查询是否选中超时 已自动暂停");
       return;
     }
     let isFinish = false;
@@ -169,9 +169,9 @@ export class CourseScheduler {
       if (json["isFinish"] === true) {
         console.log(json["result"]);
         isFinish = true;
-        course.eventlog.push(json["result"]);
+        course.eventlog.unshift(json["result"]);
       } else {
-        course.eventlog.push(`第${retry}次查询无结果`);
+        course.eventlog.unshift(`第${retry}次查询无结果`);
       }
     });
 

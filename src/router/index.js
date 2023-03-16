@@ -3,6 +3,7 @@ import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/LoginView.vue";
 import SelectCourseVIew from "@/views/SelectCourseVIew.vue";
 import CourseScheduleView from "@/views/CourseScheduleView.vue";
+import DeleteCourseVIew from "@/views/DeleteCourseVIew.vue";
 
 const routes = [
   {
@@ -32,6 +33,11 @@ const routes = [
     path: "/course-scheduler",
     name: "path scheduler",
     component: CourseScheduleView
+  },
+  {
+    path: "/delete-course",
+    name: "delete course",
+    component: DeleteCourseVIew,
   }
 ];
 
