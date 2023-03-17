@@ -88,8 +88,8 @@ if (isDevelopment) {
 
 /*************************************/
 
-const { jwc_entry_url, jwc_jc, jwc_captcha_url, jwc_home, http_head } = require("../src/config/config");
-
+import { jwc_entry_url, jwc_jc, jwc_captcha_url, jwc_home, http_head } from "@/config/config";
+import md5 from "md5";
 import config from "./config/webSessionEssential";
 
 let JSESSIONID = config.JSESSIONID;
@@ -156,9 +156,8 @@ ipcMain.handle("init_urp_login", async () => {
 
 ipcMain.handle("post_login_info", async (event, data) => {
   let { student_id, password, captcha } = JSON.parse(data);
-  const md5 = require("md5");
   // console.log(student_id, password, captcha);
-  saveLoginInfo(student_id,password)
+  saveLoginInfo(student_id, password);
   let post_data = {
     "j_username": student_id,
     "j_password": md5(password),
@@ -201,18 +200,18 @@ ipcMain.handle("post_login_info", async (event, data) => {
   });
 });
 
-ipcMain.handle("login_info_file",(event, data)=>{
+ipcMain.handle("login_info_file", (event, data) => {
   data = JSON.parse(data);
-  switch(data.op){
+  switch (data.op) {
     case "write":
-      saveLoginInfo(data.student_ID,data.password)
-      return JSON.stringify({status:"success"})
+      saveLoginInfo(data.student_ID, data.password);
+      return JSON.stringify({ status: "success" });
     case "read":
-      let result = readLoginInfo()
-      return JSON.stringify(result)
+      let result = readLoginInfo();
+      return JSON.stringify(result);
   }
 
-})
+});
 
 ipcMain.handle("urp_login_state", () => {
   console.log(isLogin);
@@ -283,10 +282,10 @@ ipcMain.handle("modify_pending_list", (event, req) => {
   return JSON.stringify({ state: "success" });
 });
 
-ipcMain.handle("delete_course",(event,id)=>{
-  console.log(id)
-  deleteCourse()
-})
+ipcMain.handle("delete_course", (event, id) => {
+  console.log(id);
+  deleteCourse();
+});
 
 // async function is_course_selection_time() {
 //     const {course_select_entry_url} = require('../config/config')

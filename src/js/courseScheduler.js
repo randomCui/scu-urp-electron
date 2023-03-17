@@ -124,7 +124,6 @@ export class CourseScheduler {
   }
 
   async queryWaitingFor(course) {
-    const { course_query_waiting_for_url } = require("../config/config");
     let queryPost = this.makePost(course);
     delete queryPost.tokenValue;
     delete queryPost.inputcode;
@@ -147,11 +146,10 @@ export class CourseScheduler {
   }
 
   async queryWaitingForResult(course, payload, retry) {
-    const { course_query_waiting_for_result_url } = require("../config/config");
     if (retry > 10) {
       console.log("可能出现问题");
       course.updateStatus("suspend");
-      course.eventlog.unshift("尝试查询是否选中超时 已自动暂停");
+      course.eventlog.push("尝试查询是否选中超时 已自动暂停");
       return;
     }
     let isFinish = false;

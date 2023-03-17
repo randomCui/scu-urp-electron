@@ -1,3 +1,16 @@
+const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
+import {
+  http_head,
+  course_select_submit_url,
+  course_select_entry_url,
+  course_select_search_url,
+  course_query_waiting_for_url,
+  course_query_waiting_for_result_url
+} from "@/config/config";
+
+// const {courseList} = require("../../test/自由选课-查询微积分")
+
 export class DesiredCourse {
   constructor(courseObject) {
     // courseObject = courseList.rwRxkZlList[0]
