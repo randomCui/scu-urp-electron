@@ -1,24 +1,39 @@
-# scu-urp-improved
+## SCU URP 客户端 - Electron版
 
-## Project setup
-```
-npm install
-```
+--------------------
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+### 开发说明
 
-### Compiles and minifies for production
-```
-npm run build
-```
+本软件开发目的主要是解决**四川大学**URP教务的选课问题，在本软件之前已有几个项目实现了类似的功能
 
-### Lints and fixes files
-```
-npm run lint
-```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+| 项目                                                                     | UI                |                 |
+|------------------------------------------------------------------------|-------------------|-----------------|
+| [四川大学URP教务处助手-皮卡丘版](https://github.com/PIKACHUIM/UrpHelps)             | 基于文本的TUI          | 历史最悠久(可能是)的抢课脚本 |
+| [四川大学综合教务系统助手](https://github.com/IcyFeather233/SCU-URP-Helper)        | 基于PyQT的win32 UI   |                 |
+| [四川大学URP教务助手-electron版](https://github.com/randomCui/scu-urp-electron) | 基于Electron的WEB UI |                 |
+
+其中[四川大学URP教务处助手-皮卡丘版](https://github.com/PIKACHUIM/UrpHelps)作为各类客户端的老前辈，截至2023/03/16还可以使用，并且总体较为稳定，唯一的缺憾就是TUI界面在桌面环境下交互体验较差
+
+为了解决交互上的缺陷，本软件选择基于Electron进行开发，这样能够使用web界面进行交互，并且重写了一套基于js的逻辑，目前实现了正常的流程
+
+-------------------------------
+
+### 使用说明
+
+~~作者好像懒得写了，一共三个界面，随便翻两下就会了~~
+
+等UI整个改完之后再写
+
+-------------------------------
+
+### 开发计划
+
+- 优化UI界面
+- 增加查看当前课程表的功能
+- 增加查询空闲教室的功能
+- 增加验证码自动填写的功能
+
+-------------------------
+
+小孩子不懂事写着玩的
