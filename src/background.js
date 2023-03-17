@@ -87,7 +87,7 @@ if (isDevelopment) {
 
 /*************************************/
 
-const {jwc_entry_url, jwc_jc, jwc_captcha_url, jwc_home, http_head} = require('../src/config/config');
+import {jwc_entry_url, jwc_jc, jwc_captcha_url, jwc_home, http_head} from "@/config/config";
 
 import config from "./config/webSessionEssential";
 let JSESSIONID = config.JSESSIONID;
@@ -149,10 +149,9 @@ ipcMain.handle('init_urp_login', async () => {
     })
 })
 
-
+import md5 from "md5"
 ipcMain.handle("post_login_info", async (event,data)=>{
     let {student_id, password, captcha} = JSON.parse(data)
-    const md5 = require('md5')
     console.log(student_id,password,captcha)
     let post_data = {
         "j_username": student_id,

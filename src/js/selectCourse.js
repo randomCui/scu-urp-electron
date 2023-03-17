@@ -1,6 +1,6 @@
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-const {http_head} = require('../config/config');
+import {http_head,course_select_submit_url, course_select_entry_url, course_select_search_url,course_query_waiting_for_url,course_query_waiting_for_result_url} from "@/config/config"
 
 // const {courseList} = require("../../test/自由选课-查询微积分")
 
@@ -192,9 +192,6 @@ export class DesiredCourse {
     }
 
     async start() {
-        const {course_select_submit_url, course_select_entry_url, course_select_search_url} = require('../config/config');
-        // const {test_submit_url} = require('../test/test_config')
-
         let canSubmit = false;
         let hasCourse = false;
 
@@ -288,7 +285,6 @@ export class DesiredCourse {
     }
 
     async queryWaitingFor() {
-        const {course_query_waiting_for_url} = require('../config/config');
         let queryPost = this.makePost();
         delete queryPost.tokenValue;
         let queryPayload = await fetch(course_query_waiting_for_url, {
@@ -310,7 +306,6 @@ export class DesiredCourse {
     }
 
     async queryWaitingForResult(payload, retry) {
-        const {course_query_waiting_for_result_url} = require('../config/config');
         if (retry > 10) {
             console.log('可能出现问题');
             this.updateStatus('suspend');

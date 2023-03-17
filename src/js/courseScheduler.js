@@ -124,7 +124,6 @@ export class CourseScheduler{
     }
 
     async queryWaitingFor(course) {
-        const {course_query_waiting_for_url} = require('../config/config');
         let queryPost = this.makePost(course);
         delete queryPost.tokenValue;
         delete queryPost.inputcode;
@@ -146,7 +145,6 @@ export class CourseScheduler{
         setTimeout(this.queryWaitingForResult.bind(this), 1000, course, queryPayload, 0);
     }
     async queryWaitingForResult(course, payload, retry) {
-        const {course_query_waiting_for_result_url} = require('../config/config');
         if (retry > 10) {
             console.log('可能出现问题');
             course.updateStatus('suspend');
