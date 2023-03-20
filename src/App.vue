@@ -1,19 +1,38 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link>
-    |
-    <router-link to="/about">About</router-link>
-    |
-    <router-link to="/login">登录</router-link>
-    |
-    <router-link to="/select-course">浏览课程</router-link>
-    |
-    <router-link to="/course-scheduler">抢课界面</router-link>
-    |
-    <router-link to="/delete-course">删除课程</router-link>
-  </nav>
-  <router-view />
+    <div class="common-layout">
+      <el-container>
+        <el-header>
+          <PageHeader></PageHeader>
+        </el-header>
+        <el-container>
+          <el-aside width="8em">
+            <AsideMenu/>
+          </el-aside>
+          <el-container>
+            <el-main>
+              <router-view />
+            </el-main>
+            <el-footer>
+              <PageFooter/>
+            </el-footer>
+          </el-container>
+        </el-container>
+      </el-container>
+    </div>
 </template>
+
+<script>
+import AsideMenu from "@/components/AsideMenu.vue";
+import PageHeader from "@/components/PageHeader.vue";
+import PageFooter from "@/components/PageFooter.vue";
+export default {
+  components :{
+    PageFooter,
+    PageHeader,
+    AsideMenu
+  }
+}
+</script>
 
 <style lang="less">
 #app {
