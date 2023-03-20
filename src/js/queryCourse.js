@@ -11,7 +11,6 @@ import config from "@/config/webSessionEssential";
 
 export default class CourseQuery {
   constructor() {
-    this.JSESSIONID = config.JSESSIONID;
     this.cachedCourse = [];
   }
 
@@ -19,7 +18,7 @@ export default class CourseQuery {
     return await fetch(course_select_search_url, {
       headers: {
         "Accept-Language": "zh-CN,zh;q=0.9",
-        "Cookie": this.JSESSIONID,
+        "Cookie": config.JSESSIONID,
         "User-Agent": http_head
       },
       method: "POST",
@@ -90,10 +89,6 @@ export default class CourseQuery {
 
   getCachedCourse() {
     return this.cachedCourse;
-  }
-
-  setJSESSIONID(JSESSIONID) {
-    this.JSESSIONID = JSESSIONID;
   }
 
   getDesiredCourseByID(ID) {

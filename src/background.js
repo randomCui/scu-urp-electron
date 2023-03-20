@@ -181,7 +181,6 @@ ipcMain.handle("post_login_info", async (event, data) => {
       // eslint-disable-next-line no-import-assign
       isLogin = true;
 
-      courseQueryWorker.setJSESSIONID(JSESSIONID);
       config.JSESSIONID = JSESSIONID;
 
       return {
