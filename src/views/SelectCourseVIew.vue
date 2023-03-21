@@ -19,25 +19,25 @@
       label-width="5em"
     >
       <el-row justify="space-around">
-          <el-col :span="12">
-            <el-form-item label="课程名">
-              <el-input v-model="search_filter.name" />
-            </el-form-item>
-            <el-form-item label="课程号">
-              <el-input v-model="search_filter.number" />
-            </el-form-item>
-            <el-form-item label="授课教师">
-              <el-input v-model="search_filter.teacher" />
-            </el-form-item>
-          </el-col>
-          <el-col style="display: flex;align-content: center" :span="8">
-            <el-form-item style="justify-self: right">
-              <el-button-group>
-                <el-button style="width: 7em" @click="sendSearchFilterToIPC">搜索</el-button>
-                <el-button style="width: 7em" @click="altSearch">代替搜索</el-button>
-              </el-button-group>
-            </el-form-item>
-          </el-col>
+        <el-col :span="12">
+          <el-form-item label="课程名">
+            <el-input v-model="search_filter.name" />
+          </el-form-item>
+          <el-form-item label="课程号">
+            <el-input v-model="search_filter.number" />
+          </el-form-item>
+          <el-form-item label="授课教师">
+            <el-input v-model="search_filter.teacher" />
+          </el-form-item>
+        </el-col>
+        <el-col style="display: flex;align-content: center" :span="8">
+          <el-form-item style="justify-self: right">
+            <el-button-group>
+              <el-button style="width: 7em" @click="sendSearchFilterToIPC">搜索</el-button>
+              <el-button style="width: 7em" @click="altSearch('full')">代替搜索</el-button>
+            </el-button-group>
+          </el-form-item>
+        </el-col>
       </el-row>
     </el-form>
     <el-form
@@ -49,17 +49,17 @@
     >
       <el-row justify="space-around">
         <el-col :span="12">
-        <el-form-item label="课程名">
-          <el-input v-model="search_filter.name"/>
-        </el-form-item>
+          <el-form-item label="课程名">
+            <el-input v-model="search_filter.name" />
+          </el-form-item>
         </el-col>
         <el-col :span="8">
-        <el-form-item>
-          <el-button-group>
-            <el-button @click="sendSearchFilterToIPC">搜索</el-button>
-            <el-button @click="altSearch">代替搜索</el-button>
-          </el-button-group>
-        </el-form-item>
+          <el-form-item>
+            <el-button-group>
+              <el-button @click="sendSearchFilterToIPC">搜索</el-button>
+              <el-button @click="altSearch('simple')">代替搜索</el-button>
+            </el-button-group>
+          </el-form-item>
         </el-col>
       </el-row>
     </el-form>
@@ -86,14 +86,14 @@
               {{ course.teacher }}
             </el-text>
             <el-text :type="course.remain>0?'success':course.remain===0? 'warning' : 'danger'">
-              {{ course.remain + '/' + course.capacity }}
+              {{ course.remain + "/" + course.capacity }}
             </el-text>
             <el-button size="small" @click.stop="toggleSelection(course.ID)">
-              {{course_selected.has(course.ID)?"添加抢课":"移除抢课"}}
+              {{ course_selected.has(course.ID) ? "添加抢课" : "移除抢课" }}
             </el-button>
-<!--            <el-icon class="header-icon">-->
-<!--            <info-filled />-->
-<!--            </el-icon>-->
+            <!--            <el-icon class="header-icon">-->
+            <!--            <info-filled />-->
+            <!--            </el-icon>-->
           </el-space>
         </template>
         <el-descriptions :column="3" border>
@@ -121,7 +121,7 @@
             label="校区"
             label-align="right"
             align="center"
-          >{{course.campus}}
+          >{{ course.campus }}
           </el-descriptions-item>
           <el-descriptions-item
             label="教室"
@@ -133,13 +133,14 @@
             label="上课时间"
             label-align="right"
             align="center">
-            {{ "星期" + integer_to_zh_cn[course.weekday] + "  " + course.startSection + "-" + (Number.parseInt(course.startSection) + Number.parseInt(course.duringSection))}}
+            {{ "星期" + integer_to_zh_cn[course.weekday] + "  " + course.startSection + "-" + (Number.parseInt(course.startSection) + Number.parseInt(course.duringSection))
+            }}
           </el-descriptions-item>
           <el-descriptions-item
-            label="课余量"
+            label="学生数"
             label-align="right"
             align="center"
-          > {{ course.remain }}
+          > {{ course.capacity - course.remain }}
           </el-descriptions-item>
           <el-descriptions-item
             label="课容量"
@@ -184,7 +185,7 @@ export default {
         2: "二",
         3: "三",
         4: "四",
-        5: "五",
+        5: "五"
       }
     };
   },
@@ -192,12 +193,12 @@ export default {
     window.ipc.invoke("get_course_list_cached").then(res => {
       return JSON.parse(res);
     }).then(json => {
-      console.log(json)
-      this.courses = json.sort((a,b)=>{
-        if(+a.number - +b.number === 0){
-        return +a.seqNumber - +b.seqNumber
-       }else{
-          return +a.number - +b.number
+      console.log(json);
+      this.courses = json.sort((a, b) => {
+        if (+a.number - +b.number === 0) {
+          return +a.seqNumber - +b.seqNumber;
+        } else {
+          return +a.number - +b.number;
         }
       });
     });
@@ -211,22 +212,45 @@ export default {
     });
   },
   methods: {
-    sendSearchFilterToIPC() {
-      window.ipc.invoke("get_course_list", JSON.stringify(this.search_filter)).then(res => {
-        return JSON.parse(res);
-      }).then(json => {
-        console.log(json);
-        this.courses = json;
-      });
+    sendSearchFilterToIPC(search_mode) {
+      if (search_mode === "simple") {
+        let simple_filter = JSON.parse(JSON.stringify(this.search_filter))
+        simple_filter.teacher = "";
+        simple_filter.number = "";
+        window.ipc.invoke("get_course_list", JSON.stringify(simple_filter)
+        ).then(res => {
+          return JSON.parse(res);
+        }).then(json => {
+          this.courses = json;
+        });
+      } else {
+        window.ipc.invoke("get_course_list", JSON.stringify(this.search_filter)).then(res => {
+          return JSON.parse(res);
+        }).then(json => {
+          this.courses = json;
+        });
+      }
     },
 
-    altSearch() {
-      window.ipc.invoke("get_course_list_alt", JSON.stringify(this.search_filter)).then(res => {
-        return JSON.parse(res);
-      }).then(json => {
-        console.log(json)
-        this.courses = json;
-      });
+    altSearch(search_mode) {
+      if (search_mode === "simple") {
+        let simple_filter = JSON.parse(JSON.stringify(this.search_filter))
+        simple_filter.teacher = "";
+        simple_filter.number = "";
+        window.ipc.invoke("get_course_list_alt", JSON.stringify(simple_filter)
+        ).then(res => {
+          return JSON.parse(res);
+        }).then(json => {
+          this.courses = json;
+        });
+      } else {
+        window.ipc.invoke("get_course_list_alt", JSON.stringify(this.search_filter)).then(res => {
+          return JSON.parse(res);
+        }).then(json => {
+          console.log(json);
+          this.courses = json;
+        });
+      }
     },
 
     toggleSelection(uid) {
@@ -269,10 +293,10 @@ li > div > div {
 }
 
 .active {
-  background: linear-gradient(90deg,#42b98350 15px,#00000000 15px);
+  background: linear-gradient(90deg, #42b98350 15px, #00000000 15px);
 }
 
-.lesson-card > div{
+.lesson-card > div {
   padding: 0 20px
 }
 </style>

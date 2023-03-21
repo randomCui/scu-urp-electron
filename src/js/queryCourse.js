@@ -80,6 +80,7 @@ export default class CourseQuery {
       console.log(json);
       let course_list = [];
       for (let course of json.list.records) {
+        course['bkskyl'] = course['bkskrl']-course['xss']
         course_list.push(new DesiredCourse(course));
       }
       this.cachedCourse = course_list;
