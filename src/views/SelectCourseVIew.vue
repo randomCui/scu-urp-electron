@@ -82,10 +82,10 @@
             <el-text>
               {{ course.number }}-{{ course.seqNumber }}
             </el-text>
-            <el-text style="max-width: 7em" type="primary" truncated>
+            <el-text style="min-width:4em; max-width: 7em" type="primary" truncated>
               {{ course.teacher }}
             </el-text>
-            <el-text :type="course.remain>0?'success':course.remain===0? 'warning' : 'danger'">
+            <el-text style="min-width: 3em" :type="course.remain>0?'success':course.remain===0? 'warning' : 'danger'">
               {{ course.remain + "/" + course.capacity }}
             </el-text>
             <el-button size="small" @click.stop="toggleSelection(course.ID)">
@@ -115,7 +115,7 @@
             label="学分"
             label-align="right"
             align="center"
-          >
+          >{{course.score}}
           </el-descriptions-item>
           <el-descriptions-item
             label="校区"
@@ -152,7 +152,19 @@
             label="课程类别"
             label-align="right"
             align="center"
-          >
+          > {{course.courseType}}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="期末"
+            label-align="right"
+            align="center"
+          > {{course.finalExamineType}}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="开设学院"
+            label-align="right"
+            align="center"
+          > {{course.teachFaculty}}
           </el-descriptions-item>
           <el-descriptions-item
             label="备注"
@@ -193,7 +205,6 @@ export default {
     window.ipc.invoke("get_course_list_cached").then(res => {
       return JSON.parse(res);
     }).then(json => {
-      console.log(json);
       this.courses = json.sort((a, b) => {
         if (+a.number - +b.number === 0) {
           return +a.seqNumber - +b.seqNumber;
@@ -221,13 +232,25 @@ export default {
         ).then(res => {
           return JSON.parse(res);
         }).then(json => {
-          this.courses = json;
+          this.courses = json.sort((a, b) => {
+            if (+a.number - +b.number === 0) {
+              return +a.seqNumber - +b.seqNumber;
+            } else {
+              return +a.number - +b.number;
+            }
+          });
         });
       } else {
         window.ipc.invoke("get_course_list", JSON.stringify(this.search_filter)).then(res => {
           return JSON.parse(res);
         }).then(json => {
-          this.courses = json;
+          this.courses = json.sort((a, b) => {
+            if (+a.number - +b.number === 0) {
+              return +a.seqNumber - +b.seqNumber;
+            } else {
+              return +a.number - +b.number;
+            }
+          });
         });
       }
     },
@@ -241,14 +264,26 @@ export default {
         ).then(res => {
           return JSON.parse(res);
         }).then(json => {
-          this.courses = json;
+          this.courses = json.sort((a, b) => {
+            if (+a.number - +b.number === 0) {
+              return +a.seqNumber - +b.seqNumber;
+            } else {
+              return +a.number - +b.number;
+            }
+          });
         });
       } else {
         window.ipc.invoke("get_course_list_alt", JSON.stringify(this.search_filter)).then(res => {
           return JSON.parse(res);
         }).then(json => {
           console.log(json);
-          this.courses = json;
+          this.courses = json.sort((a, b) => {
+            if (+a.number - +b.number === 0) {
+              return +a.seqNumber - +b.seqNumber;
+            } else {
+              return +a.number - +b.number;
+            }
+          });
         });
       }
     },

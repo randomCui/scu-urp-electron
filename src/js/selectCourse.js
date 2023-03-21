@@ -32,6 +32,11 @@ export class DesiredCourse {
     this.capacity = courseObject.bkskrl;
     this.remain = courseObject.bkskyl;
 
+    this.score = courseObject.xf;
+    this.finalExamineType = courseObject.kslxmc;
+    this.courseType = courseObject.kclbmc;
+    this.teachFaculty = courseObject.kkxsjc;
+
     // this.UID = this.ID + '_' + this.subID + '_' + this.semester + '_' + this.name
     this.programPlanNumber = undefined;
     // this.token = undefined;
@@ -133,7 +138,11 @@ export class DesiredCourse {
       lastQueryTimeElapse: this.lastQueryTimeElapse,
       status: this.status,
       triedTimes: this.triedTimes,
-      eventlog: this.eventlog
+      eventlog: this.eventlog,
+      score: this.score,
+      finalExamineType: this.finalExamineType,
+      courseType: this.courseType,
+      teachFaculty: this.teachFaculty
     };
   }
 }
