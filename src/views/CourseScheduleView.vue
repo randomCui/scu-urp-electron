@@ -1,4 +1,12 @@
 <template>
+  <el-row align="middle">
+    <el-col :span="4">
+      <el-text>轮询时间</el-text>
+    </el-col>
+    <el-col :span="4">
+      <el-input placeholder="轮询时间"/>
+    </el-col>
+  </el-row>
   <div>
     <input @click="refresh_remains_once" :disabled="isQuery" type="button" value="刷新一次">
     <input @click="toggle_refresh" type="button" :value="isQuery? '暂停' : '开始'">
