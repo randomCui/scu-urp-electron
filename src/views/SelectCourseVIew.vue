@@ -1,68 +1,205 @@
 <template>
-  <div>
-    <form style="display: grid">
-      <div>
-        <input v-model="search_filter.name" placeholder="课程名">
+  <el-card
+    body-style="padding: 10px 20px 0"
+  >
+    <template #header>
+      <div style="display:flex; justify-content: space-between; align-items: center">
+        <span>搜索课程</span>
+        <el-radio-group size="small" v-model="search_mode" style="justify-self: end">
+          <el-radio-button label="简单搜索" />
+          <el-radio-button label="复杂搜索" />
+          <el-radio-button label="隐藏" />
+        </el-radio-group>
       </div>
-      <div>
-        <input v-model="search_filter.number" placeholder="课程号">
-      </div>
-      <div>
-        <input v-model="search_filter.teacher" placeholder="授课教师">
-      </div>
-      <div>
-        <input @click="sendSearchFilterToIPC" type="button" value="搜索">
-        <input @click="altSearch" type="button" value="代替搜索">
-      </div>
-    </form>
-    <ul>
-      <li :class="{active: course_selected.has(course.ID)}" v-bind:key="course.ID" v-for="course in courses">
-        <div>
-          <div>
-            <h3>{{ course.name }}</h3>
-            <p>{{ course.number }}-{{ course.seqNumber }}</p>
-            <p>{{ course.teacher }}</p>
-          </div>
-          <div>
-            <br>
-            <p>{{ course.building + " " + course.classroom }}</p>
-            <p>
-              {{ "星期" + course.weekday + "  " + course.startSection + "到" + (Number.parseInt(course.startSection) + Number.parseInt(course.duringSection)) + "节"
-              }}</p>
-          </div>
-          <div>
-            <br>
-            <p>总容量: {{ course.capacity }}</p>
-            <p>课余量: {{ course.remain }}</p>
-          </div>
-          <div>
-            <input @click="toggleSelection(course.ID)" type="button" value="加入课程">
-          </div>
-        </div>
-      </li>
-    </ul>
-  </div>
+    </template>
+    <el-form
+      v-model="search_filter"
+      v-if="search_mode === '复杂搜索'"
+      label-position="left"
+      label-width="5em"
+    >
+      <el-row justify="space-around">
+          <el-col :span="12">
+            <el-form-item label="课程名">
+              <el-input v-model="search_filter.name" />
+            </el-form-item>
+            <el-form-item label="课程号">
+              <el-input v-model="search_filter.number" />
+            </el-form-item>
+            <el-form-item label="授课教师">
+              <el-input v-model="search_filter.teacher" />
+            </el-form-item>
+          </el-col>
+          <el-col style="display: flex;align-content: center" :span="8">
+            <el-form-item style="justify-self: right">
+              <el-button-group>
+                <el-button style="width: 7em" @click="sendSearchFilterToIPC">搜索</el-button>
+                <el-button style="width: 7em" @click="altSearch">代替搜索</el-button>
+              </el-button-group>
+            </el-form-item>
+          </el-col>
+      </el-row>
+    </el-form>
+    <el-form
+      v-model="search_filter"
+      :inline="true"
+      v-else-if="search_mode === '简单搜索'"
+      label-position="left"
+      label-width="5em"
+    >
+      <el-row justify="space-around">
+        <el-col :span="12">
+        <el-form-item label="课程名">
+          <el-input v-model="search_filter.name"/>
+        </el-form-item>
+        </el-col>
+        <el-col :span="8">
+        <el-form-item>
+          <el-button-group>
+            <el-button @click="sendSearchFilterToIPC">搜索</el-button>
+            <el-button @click="altSearch">代替搜索</el-button>
+          </el-button-group>
+        </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+  </el-card>
+  <el-card
+    class="lesson-card"
+    :class="{active: course_selected.has(course.ID)}"
+    v-bind:key="course.ID"
+    v-for="course in courses"
+    body-style="padding: 0 20px"
+    style="margin-bottom: 5px"
+  >
+    <el-collapse>
+      <el-collapse-item>
+        <template #title>
+          <el-space spacer="|">
+            <el-text tag="b" style="width: 10em" truncated>
+              {{ course.name }}
+            </el-text>
+            <el-text>
+              {{ course.number }}-{{ course.seqNumber }}
+            </el-text>
+            <el-text style="max-width: 7em" type="primary" truncated>
+              {{ course.teacher }}
+            </el-text>
+            <el-text :type="course.remain>0?'success':course.remain===0? 'warning' : 'danger'">
+              {{ course.remain + '/' + course.capacity }}
+            </el-text>
+            <el-button size="small" @click.stop="toggleSelection(course.ID)">
+              {{course_selected.has(course.ID)?"添加抢课":"移除抢课"}}
+            </el-button>
+<!--            <el-icon class="header-icon">-->
+<!--            <info-filled />-->
+<!--            </el-icon>-->
+          </el-space>
+        </template>
+        <el-descriptions :column="3" border>
+          <el-descriptions-item
+            label="课程号"
+            label-align="right"
+            align="center"
+            label-class-name="my-label"
+            class-name="my-content"
+          >{{ course.number }}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="授课教师"
+            label-align="right"
+            align="center"
+          >{{ course.teacher }}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="学分"
+            label-align="right"
+            align="center"
+          >
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="校区"
+            label-align="right"
+            align="center"
+          >{{course.campus}}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="教室"
+            label-align="right"
+            align="center">
+            {{ course.building + " " + course.classroom }}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="上课时间"
+            label-align="right"
+            align="center">
+            {{ "星期" + integer_to_zh_cn[course.weekday] + "  " + course.startSection + "-" + (Number.parseInt(course.startSection) + Number.parseInt(course.duringSection))}}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="课余量"
+            label-align="right"
+            align="center"
+          > {{ course.remain }}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="课容量"
+            label-align="right"
+            align="center"
+          > {{ course.capacity }}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="课程类别"
+            label-align="right"
+            align="center"
+          >
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="备注"
+            label-align="right"
+            align="center"
+          >
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-collapse-item>
+    </el-collapse>
+  </el-card>
 </template>
 
 <script>
+
 export default {
   name: "SelectCourseVIew",
   data() {
     return {
+      search_mode: "简单搜索",
       courses: [],
       search_filter: {
         name: "",
         teacher: "",
         number: ""
       },
-      course_selected: new Set()
+      course_selected: new Set(),
+      integer_to_zh_cn: {
+        1: "一",
+        2: "二",
+        3: "三",
+        4: "四",
+        5: "五",
+      }
     };
   },
   mounted() {
     window.ipc.invoke("get_course_list_cached").then(res => {
       return JSON.parse(res);
     }).then(json => {
-      this.courses = json;
+      console.log(json)
+      this.courses = json.sort((a,b)=>{
+        if(+a.number - +b.number === 0){
+        return +a.seqNumber - +b.seqNumber
+       }else{
+          return +a.number - +b.number
+        }
+      });
     });
     window.ipc.invoke("modify_selection_list", JSON.stringify({
         op: "get cache"
@@ -87,6 +224,7 @@ export default {
       window.ipc.invoke("get_course_list_alt", JSON.stringify(this.search_filter)).then(res => {
         return JSON.parse(res);
       }).then(json => {
+        console.log(json)
         this.courses = json;
       });
     },
@@ -131,6 +269,10 @@ li > div > div {
 }
 
 .active {
-  background: #42b98340;
+  background: linear-gradient(90deg,#42b98350 15px,#00000000 15px);
+}
+
+.lesson-card > div{
+  padding: 0 20px
 }
 </style>
